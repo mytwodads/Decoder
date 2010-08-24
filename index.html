@@ -1,0 +1,119 @@
+<!DOCTYPE HTML>
+<html>
+    <head>
+        <!-- This is our function array -->
+        <script src ="functions.js">
+        </script>
+        <!-- These are our general utility functions -->
+        <script>
+            
+            //Utility Functions
+            
+            //Converts the first character of a string into its ascii int representation
+            function ord(String){
+                return String.charCodeAt(0);
+            }
+            
+            //Converts an int into its ascii character
+            function chr(asciiint){
+                return String.fromCharCode(asciiint);
+            }
+            
+            //Displays remaining characters under textarea
+            function LimitText(AId, BId){
+                var e1 = document.getElementById(AId);
+                var e2 = document.getElementById(BId);
+                var l1 = e1.value.length;
+                (l1 > 130) ? e1.value = e1.value.substring(0, 130) : e2.innerHTML = 130 - l1
+            }
+            
+            //Converts string into an array of individual character ascii codes
+            function arrayze(String){
+                var theArray = String.split(""); //this splits every character
+                for (var i = 0; i < theArray.length; i++) {
+                    theArray[i] = ord(theArray[i]);
+                }
+                return theArray;
+            }
+            
+            //Converts hashtag into ascii ints and adds together for a checksum-style offset
+            function getHashtag(){
+                var hashTag = document.getElementById("hashtag").value;
+                hashTag = arrayze(hashTag);
+//                	var value = 0;
+//                		for (var i = 0; i< hashTag.length; i++){
+//                		value = value +hashTag[i];	
+//                	}
+                return hashTag;
+            }
+            
+            //Takes ascii int values in an array and encrypts them using a function chosen from our list
+            function munge(mungeArray, offset){
+                for (var i = 0; i < mungeArray.length; i++) {
+                    var encryptFunction = encryptr[offset[i%offset.length]]; //% mungeArray.length];//Selecting a function from our list
+                    mungeArray[i] = encryptFunction(mungeArray[i]) % 96 + 32;//Perform 
+                    console.log(mungeArray[i]);
+                }
+                return mungeArray;
+            }
+			
+			function unMunge(mungeArray, offset){
+                for (var i = 0; i < mungeArray.length; i++) {
+					mungeArray[i] -= 32; 
+                    var decryptFunction = decryptr[offset[i%offset.length]];//Selecting a function from our list
+                    if (decryptFunction(mungeArray[i]) < 32 ) mungeArray[i] = decryptFunction(mungeArray[i]) + 96;
+					else mungeArray[i] = decryptFunction(mungeArray[i]);
+                    console.log(mungeArray[i]);
+                }
+                return mungeArray;
+            }
+            
+            function reString(theArray){
+                for (var i = 0; i < theArray.length; i++) {
+                    theArray[i] = chr(theArray[i]);
+                }
+                var finished = theArray.join("");
+                return finished;
+            }
+            
+            //Main Function
+            
+            function getMessageText(){
+                var message = document.getElementById("mtext").value; //grab message text
+                message = arrayze(message); //convert each character into ascii code and save result in array
+                var offset = getHashtag(); //grabs offset from hastag
+                var munged = munge(message, offset); //munges the array of characters based on function list and offset
+                var tweetReady = reString(munged);
+                document.getElementById("mtext").value = tweetReady;
+            }
+			
+			function returnMessageText(){
+                var message = document.getElementById("mtext").value; //grab message text
+                message = arrayze(message); //convert each character into ascii code and save result in array
+                var offset = getHashtag(); //grabs offset from hastag
+                var unMunged = unMunge(message, offset); //munges the array of characters based on function list and offset
+                var tweetReady = reString(unMunged);
+                document.getElementById("mtext").value = tweetReady;
+            }
+			
+        </script>
+    </head>
+    <body>
+        <form action = "javascript: getMessageText();">
+            <label>
+                Type text below
+            </label>
+            <input type= "text" maxlength= 8 id = "hashtag">
+            <textarea id="mtext" onkeyup="LimitText('mtext','cleft');" onblur="" rows=5 cols=30></textarea>
+            <br>
+            <label id="cleft" style="color:red;font-weight:bold">
+                130
+            </label>
+            <label style="color:red;font-weight:bold">
+                Characters Left
+            </label>
+            <input type="submit" value="Submit" />
+        </form>
+		<button onclick = "javascript: returnMessageText();">Unmunge</button>
+    </body>
+</html>
