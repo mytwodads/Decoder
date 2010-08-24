@@ -69,7 +69,7 @@
                 for (var i = 0; i < mungeArray.length; i++) {
                     var encryptFunction = encryptr[offset[i%offset.length]]; //% mungeArray.length];//Selecting a function from our list
                     mungeArray[i] = encryptFunction(mungeArray[i]) % 96 + 32;//Perform 
-                    console.log(mungeArray[i]);
+                    //console.log(mungeArray[i]);
                 }
                 return mungeArray;
             }
@@ -84,7 +84,7 @@
 					}
 					else 
 						mungeArray[i] = decryptFunction(mungeArray[i]);
-                    console.log(mungeArray[i]);
+                    //console.log(mungeArray[i]);
                 }
                 return mungeArray;
             }
@@ -106,12 +106,12 @@
     				dataType: 'html',
     				timeout: 1000,
     				error: function(){
-      					alert('Error loading document');
+      					alert('Unable to connect to authentication server');
     					},
     				success: function(theText)
     					{
+						encodedHash = theText;
 						var finalTweet = theTweet + "#" + theText;
-						alert(finalTweet);
 						return finalTweet;
 						}
 					});
@@ -126,7 +126,7 @@
                 var munged = munge(message, offset); //munges the array of characters based on function list and offset
                 var tweetReady = reString(munged);
                 document.getElementById("mtext").value = tweetReady;
-				var finalTweet = getRequest("validator.php",{h:document.getElementById("hashtag").value},tweetReady);
+				var finalTweet = getRequest("validator.php",{h:document.getElementById("hashtag").value,c:1},tweetReady);
             }
 			
 			function returnMessageText(){
@@ -136,6 +136,7 @@
                 var unMunged = unMunge(message, offset); //munges the array of characters based on function list and offset
                 var tweetReady = reString(unMunged);
                 document.getElementById("mtext").value = tweetReady;
+				var finalTweet = getRequest("validator.php",{h:encodedHash,c:0},tweetReady);
             }
 			
         </script>

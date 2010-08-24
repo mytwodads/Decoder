@@ -9,15 +9,36 @@ require "offset.php";
 $scriptName = $_SERVER['PHP_SELF']; 
 $hashtagName = "h";
 $hashtagValue = $_GET[$hashtagName];
+$codeName = "c";
+$codeValue = $_GET[$codeName];
 
-$hashKey = arrayze($offset); //turns the word of the day into an offset array
-$hashtag = arrayze($hashtagValue); //turns the inputted hashtag into an ascii character code array
+if ($codeValue) {
 
-for ($i = 0; $i < count($hashtag); $i++) { //applies offset and encrypt function to the hashtag array
-	$encryptor = $functions[$hashKey[$i%count($hashKey)]];
-	$hashtag[$i] = ($hashtag[$i] + $encryptor)%96 + 32;
+	$hashKey = arrayze($offset); //turns the word of the day into an offset array
+	$hashtag = arrayze($hashtagValue); //turns the inputted hashtag into an ascii character code array
+
+	for ($i = 0; $i < count($hashtag); $i++) { //applies offset and encrypt function to the hashtag array
+		$encryptor = $functions[$hashKey[$i%count($hashKey)]];
+		$hashtag[$i] = ($hashtag[$i] + $encryptor)%96 + 32;
+	}
+	echo(reString($hashtag));
 }
-echo(reString($hashtag));
+
+else {
+
+	$hashKey = arrayze($offset); //turns the word of the day into an offset array
+	$hashtag = arrayze($hashtagValue); //turns the inputted hashtag into an ascii character code array
+
+	for ($i = 0; $i < count($hashtag); $i++) { //applies offset and encrypt function to the hashtag array
+		$hashtag[$i] -= 32;
+		$encryptor = $functions[$hashKey[$i%count($hashKey)]];
+		$hashtag[$i] = $hashtag[$i] - $encryptor;
+		while ($hashtag[$i] < 32) {
+			$hashtag[$i] += 96;
+		}
+	}
+	echo(reString($hashtag));
+}
 
 //UTILITY FUNCTIONS
 
