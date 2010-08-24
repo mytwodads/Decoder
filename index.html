@@ -2,8 +2,8 @@
 <html>
     <head>
         <!-- This is our function array -->
-        <script src ="functions.js">
-        </script>
+        <script src ="functions.js"> </script>
+        <script src ="http://ajax.googleapis.com/ajax/libs/jquery/1/jquery.min.js"></script>
         <!-- These are our general utility functions -->
         <script>
             
@@ -78,8 +78,12 @@
                 for (var i = 0; i < mungeArray.length; i++) {
 					mungeArray[i] -= 32; 
                     var decryptFunction = decryptr[offset[i%offset.length]];//Selecting a function from our list
-                    if (decryptFunction(mungeArray[i]) < 32 ) mungeArray[i] = decryptFunction(mungeArray[i]) + 96;
-					else mungeArray[i] = decryptFunction(mungeArray[i]);
+                    if (decryptFunction(mungeArray[i]) < 32) {
+						mungeArray[i] = decryptFunction(mungeArray[i]) + 96;
+						if (mungeArray[i] < 32) mungeArray[i] += 96;
+					}
+					else 
+						mungeArray[i] = decryptFunction(mungeArray[i]);
                     console.log(mungeArray[i]);
                 }
                 return mungeArray;
@@ -92,6 +96,26 @@
                 var finished = theArray.join("");
                 return finished;
             }
+			
+			function getRequest(theURL,theData,theTweet){
+  				$.ajax(
+  					{
+    				url: theURL,
+					data: theData,
+    				type: 'GET',
+    				dataType: 'html',
+    				timeout: 1000,
+    				error: function(){
+      					alert('Error loading document');
+    					},
+    				success: function(theText)
+    					{
+						var finalTweet = theTweet + "#" + theText;
+						alert(finalTweet);
+						return finalTweet;
+						}
+					});
+				}
             
             //Main Function
             
@@ -102,6 +126,7 @@
                 var munged = munge(message, offset); //munges the array of characters based on function list and offset
                 var tweetReady = reString(munged);
                 document.getElementById("mtext").value = tweetReady;
+				var finalTweet = getRequest("validator.php",{h:document.getElementById("hashtag").value},tweetReady);
             }
 			
 			function returnMessageText(){
