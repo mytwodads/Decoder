@@ -26,6 +26,23 @@
                 var l1 = e1.value.length;
                 (l1 > 130) ? e1.value = e1.value.substring(0, 130) : e2.innerHTML = 130 - l1
             }
+			
+			function checkText(elementID) {
+				var text = document.getElementById(elementID).value;
+				var subtext = text.charAt(text.length-1);
+				if (ord(subtext) < 32 || ord(subtext) > 126) {
+					document.getElementById(elementID).value = text.substring(0,text.length-1);
+				}
+			}
+			
+			function notEmpty() {
+				var message = document.getElementById("mtext").value;
+				var hashtag = document.getElementById("hashtag").value;
+				if (message.length == 0 || hashtag.length == 0){
+					document.getElementById("errortext").innerHTML = "Please fill in both the message and the passkey.";
+				}
+				else document.getElementById("errortext").innerHTML = "";
+			}
             
             //Converts string into an array of individual character ascii codes
             function arrayze(String){
@@ -99,12 +116,13 @@
         </script>
     </head>
     <body>
-        <form action = "javascript: getMessageText();">
+    	<div id="errortext"></div>  
+        <form action = "javascript: getMessageText(); notEmpty();">
             <label>
                 Type text below
             </label>
-            <input type= "text" maxlength= 8 id = "hashtag">
-            <textarea id="mtext" onkeyup="LimitText('mtext','cleft');" onblur="" rows=5 cols=30></textarea>
+            <input type= "text" maxlength= 8 id = "hashtag" onkeyup = "checkText('hashtag');">
+            <textarea id="mtext" onkeyup="LimitText('mtext','cleft'); checkText('mtext');" onblur="" rows=5 cols=30></textarea>
             <br>
             <label id="cleft" style="color:red;font-weight:bold">
                 130
@@ -114,6 +132,6 @@
             </label>
             <input type="submit" value="Submit" />
         </form>
-		<button onclick = "javascript: returnMessageText();">Unmunge</button>
+		<button onclick = "javascript: returnMessageText(); notEmpty();">Unmunge</button>
     </body>
 </html>
