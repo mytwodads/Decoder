@@ -34,6 +34,7 @@ if (oAuthAdapter.isAuthorized() == false) {
         receivePin);
 }
 
+//else {
 // this sets the background color of the master UIView (when there are no windows/tab groups on it)
 Titanium.UI.setBackgroundColor('#000');
 
@@ -42,13 +43,16 @@ var tabGroup = Titanium.UI.createTabGroup();
 
 var WindowHeight = Titanium.Platform.displayCaps.platformHeight;
 var WindowWidth = Titanium.Platform.displayCaps.platformWidth;
+var secretWord = "";
+var secretMessage = "";
 
-//alert(JSON.stringify(height));
+//echo(stringify(brian));
 
 
 
+function receiveTheTweet() {
 var xhr = Titanium.Network.createHTTPClient();
-xhr.open("GET", "http://search.twitter.com/search.json?q=#itp&rpp=1");
+xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
 xhr.onreadystatechange = function(status, response) {
    if(status >= 200 && status <= 300) {
      onSuccess(response);
@@ -59,13 +63,25 @@ xhr.onreadystatechange = function(status, response) {
 
 xhr.send();
 xhr.onload = function() {
-	var returnedText = this.responseText;
-	returnedText = JSON.parse(returnedText);
-	textArea.value = returnedText.results[0].text;
+	var message = this.responseText;
+	message = JSON.parse(message);
+	var theString = message.results[0].text;
+	var theArray = theString.split(' ');
+	message = theArray[0];
+	message = arrayze(message); //convert each character into ascii code and save result in array
+    var offset = getHashtag(); //grabs offset from hastag
+    var unmunged = unMunge(message, offset); //munges the array of characters based on function list and offset
+    secretMessage = reString(unmunged);
+	
+	textArea.value = secretMessage;
+	
 	//textArea.value = this.responseText;
 	//returnedText = JSON.parse(returnedText);
 	//label2.text = JSON.parse(xhr.responseText);
 };
+}
+
+
 
 
 //
@@ -89,6 +105,33 @@ var label1 = Titanium.UI.createLabel({
 	width:'auto'
 });
 
+var flexSpace = Titanium.UI.createButton({
+	style:Titanium.UI.iPhone.SystemButtonStyle.FLEXIBLE_SPACE
+});
+
+var send = Titanium.UI.createButton({
+	title:'Send Message',
+	style:Titanium.UI.iPhone.SystemButtonStyle.DONE		
+});
+
+send.addEventListener('click', function()
+{
+	sendTheTweet();
+});
+
+var toolbar = Titanium.UI.createToolbar({
+	items:[flexSpace,send],
+	bottom:0,
+	borderTop:true,
+	borderBottom:false,
+	translucent:true,
+	barColor:'#999'
+});
+
+
+
+win1.add(toolbar);
+
 //win1.add(label1);
 
 var secretKeyField = Titanium.UI.createTextField({
@@ -104,9 +147,21 @@ var secretKeyField = Titanium.UI.createTextField({
 secretKeyField.addEventListener('change',function(e) 
 	{
 	var contentLength = e.source.value.length;
-	if (contentLength > 8) e.source.value = e.source.value.substring(0, 8);
+	if (contentLength > 7) e.source.value = e.source.value.substring(0, 7);
+	l.text = 'Remaining characters: ' + (8-contentLength).toString();
 	checkText(e.source);
+	
 	});
+
+secretKeyField.addEventListener('focus',function(e){
+	var contentLength = e.source.value.length;
+	l.text = 'Remaining characters: ' + (8-contentLength).toString();
+});
+
+secretKeyField.addEventListener('blur',function() {
+		getRequest("http://chinaalbino.com/validator.php?h="+secretKeyField.value+"&c=1");
+	});
+
 
 function checkText(elementID) {
 	var text = elementID.value;
@@ -115,10 +170,6 @@ function checkText(elementID) {
 		elementID.value = text.substring(0,text.length-1);
 	}
 }
-
-var flexSpace = Titanium.UI.createButton({
-	style:Titanium.UI.iPhone.SystemButtonStyle.FLEXIBLE_SPACE
-});
 
 var l = Ti.UI.createLabel({
 		text:'Remaining characters: 130',
@@ -145,14 +196,18 @@ var messageField = Titanium.UI.createTextArea({
     font:{fontSize:16,fontFamily:'Helvetica Neue'},
 });
 
+messageField.addEventListener('focus',function(e){
+	var contentLength = e.source.value.length;
+	l.text = 'Remaining characters: ' + (128-contentLength).toString();
+});
+
 messageField.addEventListener('change',function(e){
 	var contentLength = e.source.value.length;
-	if (contentLength > 129) {
-		e.source.value = e.source.value.substring(0, 129);
+	l.text = 'Remaining characters: ' + (128-contentLength).toString();
+	if (contentLength > 127) {
+		e.source.value = e.source.value.substring(0, 127);
 	}
 	checkText(e.source);
-	
-	l.text = 'Remaining characters: ' + (130-contentLength).toString();
 });
 
 messageField.addEventListener('blur',encodeMessage);
@@ -163,9 +218,7 @@ function encodeMessage() {
     var offset = getHashtag(); //grabs offset from hastag
     var munged = munge(message, offset); //munges the array of characters based on function list and offset
     var tweetReady = reString(munged);
-    messageField.value = tweetReady;
-    sendTheTweet();
-	//var finalTweet = getRequest("http://chinaalbino.com/validator.php","h=secretKeyField.value&c=1"},tweetReady);
+    secretMessage = tweetReady;
 }
 
 
@@ -195,19 +248,38 @@ function munge(mungeArray, offset){
     return mungeArray;
 }
 
-function getRequest(theURL,theData){
+function getRequest(theURL){
 	var thr = Titanium.Network.createHTTPClient();
 	thr.open("GET", theURL);
 	thr.onreadystatechange = function(status, response) {
-   	if(status >= 200 && status <= 300) {
-    onSuccess(response);
-  } else {
-    onError(response);
-  }
+   		if(status >= 200 && status <= 300) {
+    		onSuccess(response);
+  		}
+  		else {
+    		onError(response);
+  		}
+ 	}
+	thr.send();
+	thr.onload = function() {
+		secretWord = unescape(this.responseText);
+		alert(secretWord);
+	};
 }
 
-thr.send(theData);
+function unMunge(mungeArray, offset){
+	for (var i = 0; i < mungeArray.length; i++) {
+		mungeArray[i] -= 32; 
+        var decryptFunction = decryptr[offset[i%offset.length]];//Selecting a function from our list
+        if (decryptFunction(mungeArray[i]) < 32) {
+			mungeArray[i] = decryptFunction(mungeArray[i]) + 96;
+			if (mungeArray[i] < 32) mungeArray[i] += 96;
+		}
+		else mungeArray[i] = decryptFunction(mungeArray[i]);
+                //console.log(mungeArray[i]);
+        }
+     return mungeArray;
 }
+
 
             
             //Converts the first character of a string into its ascii int representation
@@ -251,21 +323,7 @@ thr.send(theData);
                         
             //Takes ascii int values in an array and encrypts them using a function chosen from our list
             			
-			function unMunge(mungeArray, offset){
-                for (var i = 0; i < mungeArray.length; i++) {
-					mungeArray[i] -= 32; 
-                    var decryptFunction = decryptr[offset[i%offset.length]];//Selecting a function from our list
-                    if (decryptFunction(mungeArray[i]) < 32) {
-						mungeArray[i] = decryptFunction(mungeArray[i]) + 96;
-						if (mungeArray[i] < 32) mungeArray[i] += 96;
-					}
-					else 
-						mungeArray[i] = decryptFunction(mungeArray[i]);
-                    //console.log(mungeArray[i]);
-                }
-                return mungeArray;
-            }
-            
+			            
             function reString(theArray){
                 for (var i = 0; i < theArray.length; i++) {
                     theArray[i] = chr(theArray[i]);
@@ -273,52 +331,11 @@ thr.send(theData);
                 var finished = theArray.join("");
                 return finished;
             }
-			
-			function getRequest(theURL,theData,theTweet){
-  				$.ajax(
-  					{
-    				url: theURL,
-					data: theData,
-    				type: 'GET',
-    				dataType: 'html',
-    				timeout: 1000,
-    				error: function(){
-      					alert('Unable to connect to authentication server');
-    					},
-    				success: function(theText)
-    					{
-						encodedHash = theText;
-						var finalTweet = theTweet + "#" + theText;
-						return finalTweet;
-						}
-					});
-				}
-            
-            //Main Function
-            
-            function getMessageText(){
-                var message = document.getElementById("mtext").value; //grab message text
-                message = arrayze(message); //convert each character into ascii code and save result in array
-                var offset = getHashtag(); //grabs offset from hastag
-                var munged = munge(message, offset); //munges the array of characters based on function list and offset
-                var tweetReady = reString(munged);
-                document.getElementById("mtext").value = tweetReady;
-				var finalTweet = getRequest("validator.php",{h:document.getElementById("hashtag").value,c:1},tweetReady);
-            }
-			
-			function returnMessageText(){
-                var message = document.getElementById("mtext").value; //grab message text
-                message = arrayze(message); //convert each character into ascii code and save result in array
-                var offset = getHashtag(); //grabs offset from hastag
-                var unMunged = unMunge(message, offset); //munges the array of characters based on function list and offset
-                var tweetReady = reString(unMunged);
-                document.getElementById("mtext").value = tweetReady;
-				var finalTweet = getRequest("validator.php",{h:encodedHash,c:0},tweetReady);
-            }
 
 function sendTheTweet() {
+	alert(secretMessage + secretWord);
 	oAuthAdapter.send('https://api.twitter.com/1/statuses/update.json', [
-  	['status', messageField.value]], 'Secret Message', 'Sent.', 'Not sent.');
+  	['status', secretMessage + " #" + secretWord]], 'Secret Message', 'Sent.', 'Not sent.');
 }
 	/*
 var thr = Titanium.Network.createHTTPClient();
@@ -348,6 +365,34 @@ var tab2 = Titanium.UI.createTab({
     window:win2
 });
 
+var secretKeyField2 = Titanium.UI.createTextField({
+    color:'#336699',
+    hintText: 'Enter the secret key',
+    height:35,
+    top:10,
+    left:10,
+    width:Titanium.Platform.displayCaps.platformWidth-20,
+    borderStyle:Titanium.UI.INPUT_BORDERSTYLE_ROUNDED
+});
+
+secretKeyField2.addEventListener('change',function(e) 
+	{
+	var contentLength = e.source.value.length;
+	if (contentLength > 7) e.source.value = e.source.value.substring(0, 7);
+	l.text = 'Remaining characters: ' + (8-contentLength).toString();
+	checkText(e.source);
+	
+	});
+
+secretKeyField2.addEventListener('focus',function(e){
+	var contentLength = e.source.value.length;
+	l.text = 'Remaining characters: ' + (8-contentLength).toString();
+});
+
+secretKeyField2.addEventListener('blur',function() {
+		getRequest("http://chinaalbino.com/validator.php?h=#"+secretKeyField.value+"&c=1");
+	});
+
 var scrollView = Titanium.UI.createScrollView({
 	height: 'auto',
 	width: 'auto',
@@ -361,6 +406,31 @@ var textArea = Titanium.UI.createTextArea({
 	width: 280,
 	font:{fontSize:20,fontFamily:'Helvetica Neue'}	
 });
+
+var receive = Titanium.UI.createButton({
+	title:'Receive Message',
+	style:Titanium.UI.iPhone.SystemButtonStyle.DONE		
+});
+
+receive.addEventListener('click', function()
+{
+	receiveTheTweet();
+});
+
+
+var toolbar2 = Titanium.UI.createToolbar({
+	items:[flexSpace,receive],
+	bottom:0,
+	borderTop:true,
+	borderBottom:false,
+	translucent:true,
+	barColor:'#999'
+});
+
+
+win2.add(secretKeyField);
+win1.add(toolbar);
+win2.add(toolbar2);
 
 
 
@@ -904,3 +974,4 @@ var decryptr =[function(arg){ var cc = arg - 60; return cc;},
                function(arg){ var cc = arg - 45; return cc;},
                function(arg){ var cc = arg - 33; return cc;},
                ];
+              // }

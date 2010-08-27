@@ -1,4 +1,4 @@
-<?php 
+<?php
 
 //error_reporting(E_ALL ^ E_NOTICE); 
 //ini_set('display_errors', 1);
@@ -12,6 +12,8 @@ $hashtagValue = $_GET[$hashtagName];
 $codeName = "c";
 $codeValue = $_GET[$codeName];
 
+$validString = "1234567890qwertyuiopasdfghjklzxcvbnmQWERTYUIOPASDFGHJKLZXCVBNM";
+
 if ($codeValue) {
 
 	$hashKey = arrayze($offset); //turns the word of the day into an offset array
@@ -20,16 +22,46 @@ if ($codeValue) {
 	for ($i = 0; $i < count($hashtag); $i++) { //applies offset and encrypt function to the hashtag array
 		$encryptor = $functions[$hashKey[$i%count($hashKey)]];
 		$hashtag[$i] = ($hashtag[$i] + $encryptor)%96 + 32;
+		if ($hashtag[$i] < 48) {
+			$hashtag[$i] += 192;
+		}
+		else if ($hashtag[$i] < 65 && $hashtag[$i] > 57) {
+			$hashtag[$i] += 183;
+		}
+		else if ($hashtag[$i] < 97 && $hashtag[$i] > 90) {
+			$hashtag[$i] += 152;
+		}
+		else if ($hashtag[$i] > 123 && $hashtag[$i] < 127) {
+			$hashtag[$i] += 69;
+		}
 	}
-	echo(reString($hashtag));
+	
+	$firstChar = pickOne($validString);
+	$lastChar = pickOne($validString);
+	
+	echo(urlencode($firstChar.reString($hashtag).$lastChar));
 }
 
 else {
-
 	$hashKey = arrayze($offset); //turns the word of the day into an offset array
-	$hashtag = arrayze($hashtagValue); //turns the inputted hashtag into an ascii character code array
+	$hashtag = substr($hashtagValue, 1);
+	$hashtag = substr($hashtag, 0, -1);
+	$hashtag = urldecode($hashtag);
+	$hashtag = arrayze($hashtag); //turns the inputted hashtag into an ascii character code array
 
 	for ($i = 0; $i < count($hashtag); $i++) { //applies offset and encrypt function to the hashtag array
+		if ($hashtag[$i] < 240 && $hashtag[$i] > 224) {
+			$hashtag[$i] -= 192;
+		}
+		else if ($hashtag[$i] < 248 && $hashtag[$i] > 240) {
+			$hashtag[$i] -= 183;
+		}
+		else if ($hashtag[$i] < 249 && $hashtag[$i] > 242) {
+			$hashtag[$i] -= 152;
+		}
+		else if ($hashtag[$i] > 192 && $hashtag[$i] < 196) {
+			$hashtag[$i] -= 69;
+		}
 		$hashtag[$i] -= 32;
 		$encryptor = $functions[$hashKey[$i%count($hashKey)]];
 		$hashtag[$i] = $hashtag[$i] - $encryptor;
@@ -58,6 +90,10 @@ function reString($anArray) {
 	}
 	$reStrung = implode($anArray);
 	return $reStrung;
+}
+
+function pickOne($string) {
+	return substr($string, rand(0,strlen($string)-1),1);
 }
 
 ?>
