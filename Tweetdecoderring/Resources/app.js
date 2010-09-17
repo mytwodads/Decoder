@@ -353,6 +353,7 @@ Ti.include('functions.js');
 		thr.send();
 		thr.onload = function() {
 			secretWord = unescape(this.responseText);
+			secretKeyField.value = secretWord;
 		};
 	}
 	
@@ -391,15 +392,37 @@ Ti.include('functions.js');
 	
 	// Formats and sends the Tweet to Twitter
 	function sendTheTweet() {
+		postToTheDatabase(secretMessage,secretWord);
+		/*
 		alert(secretMessage + secretWord);
 		oAuthAdapter.send('https://api.twitter.com/1/statuses/update.json', [
 	  	['status', secretMessage + " #" + secretWord]], 'Secret Message', 'Sent.', 'Not sent.');
+*/
+	}
+	
+	function postToTheDatabase(messageText,hashTag) {
+		var xhr = Titanium.Network.createHTTPClient();
+		var theHashy = hashTag.substring(1,hashTag.length-1);
+		xhr.open("GET", "http://chinaalbino.com/databaser.php?m="+messageText+"&h="+theHashy);
+		xhr.onreadystatechange = function(status, response) {
+	   		if(status >= 200 && status <= 300) {
+	    		onSuccess(response);
+	  		}
+	  		else {
+	    		onError(response);
+	  		}
+	 	}
+		xhr.send();
+		xhr.onload = function() {
+		};
 	}
 	
 	// This function looks for tweets encoded with the hashtag
 	function receiveTheTweet() {
 		var xhr = Titanium.Network.createHTTPClient();
-		xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
+		var theHashy = secretWord.substring(1,secretWord.length-1);
+		xhr.open("GET", "http://chinaalbino.com/databaser.php?q="+theHashy);
+		//xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
 		xhr.onreadystatechange = function(status, response) {
 	   		if(status >= 200 && status <= 300) {
 	    		onSuccess(response);
@@ -409,9 +432,9 @@ Ti.include('functions.js');
 	  		}
 		}
 		xhr.send();
-		xhr.onload = function() {
+		xhr.onload = function () {
 			var message = this.responseText;
-			message = JSON.parse(message);
+			/*message = JSON.parse(message);
 			var theString = message.results[0].text;
 			var theArray = theString.split(' #');
 			message = theArray[0];
@@ -419,7 +442,7 @@ Ti.include('functions.js');
 			message = message.replace(/&quot;/g,'"');
 			message = message.replace(/&amp;/g,'&');
 			message = message.replace(/&gt;/g,'>');
-			message = message.replace(/&lt;/g,'<');
+			message = message.replace(/&lt;/g,'<');*/
 			message = arrayze(message); // convert each character into ascii code and save result in array
 			var offset = getHashtag(); // grabs offset from hastag
 	    	var unmunged = unMunge(message, offset); // munges the array of characters based on function list and offset
