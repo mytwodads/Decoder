@@ -403,7 +403,10 @@ Ti.include('functions.js');
 	function postToTheDatabase(messageText,hashTag) {
 		var xhr = Titanium.Network.createHTTPClient();
 		var theHashy = hashTag.substring(1,hashTag.length-1);
-		xhr.open("GET", "http://chinaalbino.com/databaser.php?m="+messageText+"&h="+theHashy);
+		theHashy = encodeURIComponent(theHashy);
+		var theMessage = encodeURIComponent(messageText);
+		alert(theMessage);
+		xhr.open("GET", "http://chinaalbino.com/databaser.php?m="+theMessage+"&h="+theHashy);
 		xhr.onreadystatechange = function(status, response) {
 	   		if(status >= 200 && status <= 300) {
 	    		onSuccess(response);
@@ -421,6 +424,7 @@ Ti.include('functions.js');
 	function receiveTheTweet() {
 		var xhr = Titanium.Network.createHTTPClient();
 		var theHashy = secretWord.substring(1,secretWord.length-1);
+		theHashy = encodeURIComponent(theHashy);
 		xhr.open("GET", "http://chinaalbino.com/databaser.php?q="+theHashy);
 		//xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
 		xhr.onreadystatechange = function(status, response) {
@@ -434,6 +438,7 @@ Ti.include('functions.js');
 		xhr.send();
 		xhr.onload = function () {
 			var message = this.responseText;
+			message = decodeURIComponent(message);
 			/*message = JSON.parse(message);
 			var theString = message.results[0].text;
 			var theArray = theString.split(' #');

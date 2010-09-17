@@ -39,6 +39,8 @@ $SqlStatement = "INSERT INTO main (message,hash) VALUES ('$messageValue','$hasht
 	# Run the query on the database through the connection
 	$result = mysql_query($SqlStatement,$connection);
 	if (!$result) die("Error " . mysql_errno() . " : " . mysql_error());
+	
+	echo ($messageValue);
 
 }
 
