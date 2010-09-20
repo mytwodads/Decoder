@@ -19,6 +19,9 @@ Ti.include('functions.js');
 	var secretWord = ""; //global hashtag holder
 	var secretMessage = ""; //global message holder
 	
+	var originalMessage = "";
+	var inited = false;
+	
 	// often used button elements
 	var flexSpace = Titanium.UI.createButton({
 		style:Titanium.UI.iPhone.SystemButtonStyle.FLEXIBLE_SPACE
@@ -177,10 +180,73 @@ Ti.include('functions.js');
 			e.source.value = e.source.value.substring(0, 127);
 		}
 		checkText(e.source);
+	});	
+	
+		// ---------------- ENCODE SWITCH ------------------------
+	
+	var encodeSwitch = Titanium.UI.createSwitch({
+		value:false,
+		top:9,
+		right:35
 	});
 	
-	messageField.addEventListener('blur',encodeMessage);
-	
+	encodeSwitch.addEventListener('change',function(e) 
+		{			
+			if (encodeSwitch.value) {
+				
+				/*
+var message = arrayze(originalMessage);
+				var newMessage = arrayze(secretMessage);
+*/
+				encodeMessage();
+				var counter = 0;
+				
+				var timer = setInterval(function(){
+					if (counter < originalMessage.length+1) {
+						messageField.value = secretMessage.substr(0,counter)+originalMessage.substr(counter+1);
+						counter ++;
+					}
+					else {
+						inited = true;
+						timer.clearInterval();
+					}
+				},25);
+			/*
+	//Encryption animation
+				for (var i = 0; i < message.length; i++) {
+					if (message[i] < newMessage[i]) {
+						for (var j = message[i]; j < newMessage[i]; j++) {
+							messageField.value = originalMessage.replace(originalMessage.charAt(i), chr(j));
+							//alert(chr(j));
+						}	
+					}
+					else {
+						for (var j = message[i]; j > newMessage[i]; j--) {
+							messageField.value = originalMessage.replace(originalMessage.charAt(i), chr(j));
+							//alert(chr(j));
+						}	
+					}	
+				}*/				
+			}
+
+			else if (!encodeSwitch.value && inited) {
+				//decodeMessage();
+				var counter = originalMessage.length+1;
+				
+				var timer = setInterval(function(){
+					if (counter >= 0) {
+						messageField.value = secretMessage.substr(0,counter)+originalMessage.substr(counter);
+						counter --;
+					}
+					else {
+						timer.clearInterval();
+					}
+				},25);
+			}
+		});
+		
+	toolbar.add(encodeSwitch);
+		
 	
 	// ---------------- ADD EVERYTHING TO THE DISPLAY LIST ------------------------
 	
@@ -322,12 +388,25 @@ Ti.include('functions.js');
 	// Encodes a message
 	function encodeMessage() {
 		var message = messageField.value; // grab message text
+		originalMessage = message;
 	    message = arrayze(message); // convert each character into ascii code and save result in array
 	    var offset = getHashtag(); // grabs offset from hastag
 	    var munged = munge(message, offset); // munges the array of characters based on function list and offset
 	    var tweetReady = reString(munged);
 	    secretMessage = tweetReady;
 	}
+	
+	// Decodes a message
+	function decodeMessage() {
+		var message = messageField.value; // grab message text
+		secretMessage = message;
+	    message = arrayze(message); // convert each character into ascii code and save result in array
+	    var offset = getHashtag(); // grabs offset from hastag
+	    var unmunged = unMunge(message, offset); // munges the array of characters based on function list and offset
+	    var displayReady = reString(unmunged);
+	    secretMessage = displayReady;
+	}
+
 	
 	// Applies text transforms selected from functions.js to an array of ascii char codes
 	function munge(mungeArray, offset){
