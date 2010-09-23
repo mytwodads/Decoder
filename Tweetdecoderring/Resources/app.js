@@ -1,4 +1,3 @@
-
 Ti.include('oauth_adapter.js');
 Ti.include('functions.js');
 
@@ -19,6 +18,7 @@ Ti.include('functions.js');
 	var secretWord = ""; //global hashtag holder
 	var secretMessage = ""; //global message holder
 	
+	var theKeyUnencoded = ""; //temporary, for Twitter scroll view test
 	var originalMessage = "";
 	var inited = false;
 	
@@ -131,7 +131,7 @@ Ti.include('functions.js');
 		{
 		var contentLength = e.source.value.length;
 		if (contentLength > 7) e.source.value = e.source.value.substring(0, 7);
-		l.text = 'Remaining characters: ' + (8-contentLength).toString();
+		label.text = 'Remaining characters: ' + (8-contentLength).toString();
 		checkText(e.source);	
 		});
 	
@@ -142,6 +142,7 @@ Ti.include('functions.js');
 	
 	secretKeyField.addEventListener('blur',function() {
 			getRequest("http://chinaalbino.com/validator.php?h="+secretKeyField.value+"&c=1");
+			theKeyUnencoded = secretKeyField.value; //temporary, for Twitter scroll view test
 	});
 	
 	
@@ -187,6 +188,7 @@ Ti.include('functions.js');
 	var encodeSwitch = Titanium.UI.createSwitch({
 		value:false,
 		top:9,
+		borderWidth:3,
 		right:35
 	});
 	
@@ -208,7 +210,7 @@ var message = arrayze(originalMessage);
 					}
 					else {
 						inited = true;
-						timer.clearInterval();
+						clearInterval(timer);
 					}
 				},25);
 			/*
@@ -239,7 +241,7 @@ var message = arrayze(originalMessage);
 						counter --;
 					}
 					else {
-						timer.clearInterval();
+						clearInterval(timer);
 					}
 				},25);
 			}
@@ -269,11 +271,32 @@ var message = arrayze(originalMessage);
 	    window:win2
 	});
 	
+	var view1 = Ti.UI.createView({
+	});
+	
+	// ---------------- MESSAGE TEXT AREA ------------------------
+	
+
+var textArea = Titanium.UI.createLabel({
+		text: "I am a webview",
+		height: 250,
+		width: 280,
+		font:{fontSize:20,fontFamily:'Helvetica Neue'}	
+	});
+	
+	view1.add(textArea);
+
+	
 	tabGroup.addTab(tab2);  
 	
-	var scrollView = Titanium.UI.createScrollView({
-		height: 'auto',
-		width: 'auto',
+	var scrollView = Titanium.UI.createScrollableView({
+		views:[view1],
+		showPagingControl:true,
+		pagingControlHeight:30,
+		maxZoomScale:2.0,
+		currentPage:1,
+		height:250,
+		top:70,
 	});
 	
 	win2.add(scrollView);
@@ -333,19 +356,7 @@ var message = arrayze(originalMessage);
 	secretKeyField2.addEventListener('blur',function() {
 			getRequest("http://chinaalbino.com/validator.php?h=#"+secretKeyField.value+"&c=1");
 		});
-	
-	
-	// ---------------- MESSAGE TEXT AREA ------------------------
-	
-	var textArea = Titanium.UI.createTextArea({
-		value: "I am a webview",
-		height: 300,
-		width: 280,
-		font:{fontSize:20,fontFamily:'Helvetica Neue'}	
-	});
-	
-	scrollView.add(textArea);
-	
+		
 	// ---------------- ADD EVERYTHING TO THE DISPLAY LIST ------------------------
 	
 	
@@ -504,8 +515,9 @@ var message = arrayze(originalMessage);
 		var xhr = Titanium.Network.createHTTPClient();
 		var theHashy = secretWord.substring(1,secretWord.length-1);
 		theHashy = encodeURIComponent(theHashy);
-		xhr.open("GET", "http://chinaalbino.com/databaser.php?q="+theHashy);
+		//xhr.open("GET", "http://chinaalbino.com/databaser.php?q="+theHashy);
 		//xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
+		xhr.open("GET", "http://search.twitter.com/search.json?q="+theKeyUnencoded); //temporary, for Twitter scroll view test
 		xhr.onreadystatechange = function(status, response) {
 	   		if(status >= 200 && status <= 300) {
 	    		onSuccess(response);
@@ -516,8 +528,41 @@ var message = arrayze(originalMessage);
 		}
 		xhr.send();
 		xhr.onload = function () {
+			
+			if (scrollView.views.length > 0) {
+				var theLength = scrollView.views.length
+				for (var i = theLength - 1; i >= 0; i-- ) {
+					scrollView.removeView(scrollView.views[i]);
+				}
+			}
+			
 			var message = this.responseText;
-			message = decodeURIComponent(message);
+			message = JSON.parse(message);
+			for (var i = 0; i < message.results.length; i++) {
+				var theString = message.results[i].text;
+				theString = theString.replace(/&quot;/g,'"');
+				theString = theString.replace(/&amp;/g,'&');
+				theString = theString.replace(/&gt;/g,'>');
+				theString = theString.replace(/&lt;/g,'<');
+				var newView = Ti.UI.createView({
+					});
+		
+					var tf = Ti.UI.createLabel({
+						text: theString,
+						width: 200,
+						height:250,
+					});
+				
+				newView.add(tf);
+				scrollView.addView(newView);
+			}
+		};
+	}
+
+			
+			
+			//message = decodeURIComponent(message);
+			/*
 			/*message = JSON.parse(message);
 			var theString = message.results[0].text;
 			var theArray = theString.split(' #');
@@ -526,7 +571,7 @@ var message = arrayze(originalMessage);
 			message = message.replace(/&quot;/g,'"');
 			message = message.replace(/&amp;/g,'&');
 			message = message.replace(/&gt;/g,'>');
-			message = message.replace(/&lt;/g,'<');*/
+			message = message.replace(/&lt;/g,'<');*//*
 			message = arrayze(message); // convert each character into ascii code and save result in array
 			var offset = getHashtag(); // grabs offset from hastag
 	    	var unmunged = unMunge(message, offset); // munges the array of characters based on function list and offset
@@ -534,4 +579,4 @@ var message = arrayze(originalMessage);
 		
 			textArea.value = secretMessage;
 		};
-	}
+	}*/
