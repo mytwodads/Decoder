@@ -209,7 +209,7 @@ var message = arrayze(originalMessage);
 						counter ++;
 					}
 					else {
-						inited = true;
+						inited = true; //keeps the animation from happening to the holder text when the app first starts.
 						clearInterval(timer);
 					}
 				},25);
@@ -310,6 +310,11 @@ var textArea = Titanium.UI.createLabel({
 	
 	receive.addEventListener('click', function()
 	{
+		var theLength = scrollView.views.length;
+			for (var i = theLength - 1; i > 0; i-- ) {
+				scrollView.removeView(scrollView.views[i]);
+			}
+		view1.hide();
 		receiveTheTweet();
 	});
 	
@@ -355,7 +360,7 @@ var textArea = Titanium.UI.createLabel({
 	
 	secretKeyField2.addEventListener('blur',function() {
 			getRequest("http://chinaalbino.com/validator.php?h=#"+secretKeyField.value+"&c=1");
-		});
+	});
 		
 	// ---------------- ADD EVERYTHING TO THE DISPLAY LIST ------------------------
 	
@@ -382,7 +387,7 @@ var textArea = Titanium.UI.createLabel({
 	
 	// Turns hashtag into array of ascii character codes
 	function getHashtag(){
-	    var hashTag = secretKeyField.value;
+	    var hashTag = secretWord.substring(1,secretWord.length-1);
 	    hashTag = arrayze(hashTag);
 	    return hashTag;
 	}
@@ -437,7 +442,7 @@ var textArea = Titanium.UI.createLabel({
 	    		onSuccess(response);
 	  		}
 	  		else {
-	    		onError(response);
+	    		//onError(response);
 	  		}
 	 	}
 		thr.send();
@@ -502,7 +507,7 @@ var textArea = Titanium.UI.createLabel({
 	    		onSuccess(response);
 	  		}
 	  		else {
-	    		onError(response);
+	    		//onError(response);
 	  		}
 	 	}
 		xhr.send();
@@ -517,44 +522,50 @@ var textArea = Titanium.UI.createLabel({
 		theHashy = encodeURIComponent(theHashy);
 		//xhr.open("GET", "http://chinaalbino.com/databaser.php?q="+theHashy);
 		//xhr.open("GET", "http://search.twitter.com/search.json?q="+secretWord+"&rpp=1");
-		xhr.open("GET", "http://search.twitter.com/search.json?q="+theKeyUnencoded); //temporary, for Twitter scroll view test
+		xhr.open("GET", "http://search.twitter.com/search.json?q="+theKeyUnencoded+"&rpp=5"); //temporary, for Twitter scroll view test
 		xhr.onreadystatechange = function(status, response) {
 	   		if(status >= 200 && status <= 300) {
 	    		onSuccess(response);
 	   		}
 	   		else {
-	     		onError(response);
+	     		//onError(response);
 	  		}
 		}
 		xhr.send();
 		xhr.onload = function () {
 			
-			if (scrollView.views.length > 0) {
+			/*
+if (scrollView.views.length > 0) {
 				var theLength = scrollView.views.length
 				for (var i = theLength - 1; i >= 0; i-- ) {
 					scrollView.removeView(scrollView.views[i]);
 				}
 			}
+*/
 			
 			var message = this.responseText;
 			message = JSON.parse(message);
 			for (var i = 0; i < message.results.length; i++) {
+				
 				var theString = message.results[i].text;
+				
 				theString = theString.replace(/&quot;/g,'"');
 				theString = theString.replace(/&amp;/g,'&');
 				theString = theString.replace(/&gt;/g,'>');
 				theString = theString.replace(/&lt;/g,'<');
-				var newView = Ti.UI.createView({
-					});
-		
-					var tf = Ti.UI.createLabel({
-						text: theString,
-						width: 200,
-						height:250,
-					});
 				
-				newView.add(tf);
+				var newView = Ti.UI.createView({
+				});
+		
 				scrollView.addView(newView);
+				
+				var tf = Ti.UI.createLabel({
+					text: theString,
+					width: 200,
+					height:250,
+				});
+					
+				newView.add(tf);
 			}
 		};
 	}
